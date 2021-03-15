@@ -1,97 +1,153 @@
-let express = require( 'express' );
+
+let express = require("express");
 let app = express();
-let server = require( 'http' ).Server( app );
-let io = require( 'socket.io' )( server );
-let stream = require( './ws/stream' );
-let path = require( 'path' );
-let favicon = require( 'serve-favicon' );
+let server = require("http").Server(app);
+let io = require("socket.io")(server);
+let stream = require("./ws/stream");
+let path = require("path");
+let favicon = require("serve-favicon");
 //require("./db/connection");
-
-
-const   mongoose              =  require("mongoose"),
-        passport              =  require("passport"),
-        bodyParser            =  require("body-parser"),
-        LocalStrategy         =  require("passport-local"),
-        passportLocalMongoose =  require("passport-local-mongoose"),
-        User                  =  require("./models/user");
-
+const flash = require('connect-flash');
+const bcrypt = require('bcrypt');
+const mongoose = require("mongoose"),
+  passport = require("passport"),
+  bodyParser = require("body-parser"),
+  LocalStrategy = require("passport-local"),
+  passportLocalMongoose = require("passport-local-mongoose"),
+  User = require("./models/user");
+  feed = require("./models/feedback");
+  
+ 
 
 //Connecting database
-mongoose.connect('mongodb://localhost:27017/GROUPIES_DB', { 
-    useNewUrlParser:true,
-    useUnifiedTopology:true,
-}).then(() => {
+var dbConn = mongoose
+  .connect("mongodb://localhost:27017/GROUPIES_DB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
     console.log("Mongodb Connected");
-}).catch((e) => {
-    console.log('No Connection');
-})
+  })
+  .catch((e) => {
+    console.log("No Connection");
+  });
 var Schema = mongoose.Schema;
-app.use(require("express-session")({
-    secret:"Any normal Word",       //decode or encode session
-    resave: false,          
-    saveUninitialized:false    
-}));
-passport.serializeUser(User.serializeUser());       //session encoding
-passport.deserializeUser(User.deserializeUser());   //session decoding
+app.use(
+  require("express-session")({
+    secret: "secret", //decode or encode session
+    resave: true,
+    saveUninitialized: false,
+  })
+);
+passport.serializeUser(User.serializeUser()); //session encoding
+passport.deserializeUser(User.deserializeUser()); //session decoding
 passport.use(new LocalStrategy(User.authenticate()));
 
-app.engine('html', require('ejs').renderFile);
-app.set('view engine', 'html');
+passport.use(
+  new LocalStrategy(function (email, password, done) {
+    User.findOne({ email: email }, function (err, user) {
+      if (err) {
+        console.log({msg:''}, err);
+        return;
+      }
+      if (!user) {
+        console.log("User Not registerd...", err);
+        return done();
+      }
+      console.log("Verification Success, User logged In...");
+      return done(null, user);
+    });    
+  })
+);
 
-app.use(bodyParser.urlencoded(
-      { extended:true }
-))
+
+
+
+app.engine("html", require("ejs").renderFile);
+app.set("view engine", "html");
+
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(flash());
 
+app.use(favicon(path.join(__dirname, "favicon.ico")));
+app.use("/assets", express.static(path.join(__dirname, "assets")));
 
-
-app.use( favicon( path.join( __dirname, 'favicon.ico' ) ) );
-app.use( '/assets', express.static( path.join( __dirname, 'assets' ) ) );
-
-
-app.get( '/', ( req, res ) => {
-    res.sendFile( __dirname + '/Login.html');
-} );
-
-app.get( '/Home',isLoggedIn ,( req, res ) => {
-    res.sendFile( __dirname + '/index.html' );
-} );
-
-app.post("/",passport.authenticate("local",{
-    successRedirect:"/Home",
-    failureRedirect:"/"
-}),function (req, res) {
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/views/Login.html");
 });
 
-app.get("/#",(req,res)=>{
-    res.render("Login.html");
+app.get("/home", isLoggedIn, (req, res) => {
+  res.sendFile(__dirname + "/views/index.html");
 });
-app.post("/#",(req,res)=>{
-    
-    User.register(new User({username: req.body.username,email:req.body.email}),req.body.password,function(err,user){
-        if(err){
-            console.log(err);
-            res.render("Login.html");
-        }
-    passport.authenticate("local")(req,res,function(){
-        res.redirect("/");
-    })    
-    })
-})/*
+
+app.get("/Login", (req, res) => {
+  res.sendFile(__dirname + "/views/Login.html", {errors});
+});
+
+app.post(
+  "/Login",
+  passport.authenticate("local", {
+    successRedirect: "/home",
+    failureRedirect: "/",
+  }),
+  function (req, res) {}
+);
+
+app.get("/register", (req, res) => {
+  res.sendFile(__dirname + "/views/Login.html");
+});
+
+app.post("/register", (req, res) => {
+  User.register(
+    new User({ username: req.body.username, email: req.body.email }),
+    req.body.password,
+    function (err, user) {
+      if (err) {
+        console.log("Email already exist");
+        return;  
+      }
+      console.log("Registration Succesfully");
+      res.redirect("/");
+      
+    }
+  );
+});
+
+
+app.get("/post-feedback",isLoggedIn, (req, res) => {
+  res.sendFile(__dirname + "/views/feedback.html");
+});
+
+app.post('/post-feedback', function (req, res) {
+  var myData = new feed(req.body);
+  myData.save()
+  .then(item => {
+    res.redirect("/post-feedback");
+//  res.send("feedback send successfully...");
+  })
+  .catch(err => {
+  res.status(400).send("unable to send feedback");
+  });
+  
+});
+
+
+
 app.get("/logout",(req,res)=>{
     req.logout();
+    console.log("Logout successfully");
+  /*  req.flash('success_msg', 'You are logged out');   */
     res.redirect("/");
-});*/
-function isLoggedIn(req,res,next) {
-    if(req.isAuthenticated()){
-        return next();
-    }
+});
+function isLoggedIn(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
     res.redirect("/");
 }
 
+io.of("/stream").on("connection", stream);
 
-
-io.of( '/stream' ).on( 'connection', stream );
-
-server.listen( 3000 );
+server.listen(3000);

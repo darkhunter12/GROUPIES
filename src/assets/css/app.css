@@ -176,6 +176,45 @@
 }
 
 
+
+.phonelink{
+    position: fixed; /* Lock location always on the scree */
+    bottom: 0; /* Set to the bottom */
+    right: 0; /* Set to the right */
+    margin: 30px; /* Add space around background */
+}
+.phoneicon{
+    width: 40px; /* Set width of icon */
+    height: 40px; /* Set height of icon */
+}
+@media screen and (max-width: 480px){
+    .lgscreenphone{
+        display: none;  /* On small screens make phone icon disappear */
+    }
+    .mbscreenphone{
+        display: block; /* On small screens make phone icon appear */
+    }
+}
+@media screen and (min-width: 481px){
+    .mbscreenphone{
+        display: none; /* On large screens make phone icon disappear */
+    }
+    .lgscreenphone{
+        display: block; /* On large screens make phone icon appear */
+    }
+}
+
+
+
+
+
+
+
+.space{
+    flex:1;
+}
+
+
 .custom-modal-content {
     background-color: #fefefe;
     margin: 15% auto;
