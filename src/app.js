@@ -6,7 +6,8 @@ let io = require("socket.io")(server);
 let stream = require("./ws/stream");
 let path = require("path");
 let favicon = require("serve-favicon");
-//require("./db/connection");
+const JSAlert = require("js-alert");
+const alert = require("alert");
 const flash = require('connect-flash');
 const bcrypt = require('bcrypt');
 const mongoose = require("mongoose"),
@@ -51,7 +52,13 @@ passport.use(
         return;
       }
       if (!user) {
-        console.log("User Not registerd...", err);
+        alert("Email is not registered......");
+        console.log("Email is not registered");
+        return done();
+      }
+      if (user.password !== password){
+        alert("password is incorrect......");
+        console.log("password is incorrect");
         return done();
       }
       console.log("Verification Success, User logged In...");
@@ -100,23 +107,21 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  User.register(
-    new User({ username: req.body.username, email: req.body.email }),
-    req.body.password,
-    function (err, user) {
-      if (err) {
-        console.log("Email already exist");
-        return;  
-      }
-      console.log("Registration Succesfully");
-      res.redirect("/");
-      
-    }
-  );
+  var userData = new User(req.body);
+  userData.save()
+  .then(item => {
+    console.log("Registration Succesfully");
+    res.redirect("/");
+  })
+  .catch(err => {
+  res.status(400).send("User already exist....");
+ 
+  console.log("User already exist....");
+  });
 });
 
 
-app.get("/post-feedback",isLoggedIn, (req, res) => {
+app.get("/post-feedback", isLoggedIn, (req, res) => {
   res.sendFile(__dirname + "/views/feedback.html");
 });
 
@@ -133,12 +138,9 @@ app.post('/post-feedback', function (req, res) {
   
 });
 
-
-
 app.get("/logout",(req,res)=>{
     req.logout();
     console.log("Logout successfully");
-  /*  req.flash('success_msg', 'You are logged out');   */
     res.redirect("/");
 });
 function isLoggedIn(req, res, next) {

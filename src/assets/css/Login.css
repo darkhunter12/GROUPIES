@@ -12,7 +12,7 @@ body{
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background: #111;
+	background: rgb(0, 0, 0);
 }
 
 .form{
