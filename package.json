@@ -1,7 +1,7 @@
 {
   "name": "groupies",
   "version": "1.0.0",
-  "description": "Groupies is a kind of conference call implementation using WebRTC, Socket.io and Node.js.",
+  "description": "Groupies is Web based communication application implementation using Express, Node.js, Socket.io and WebRTC.",
   "main": "src/app.js",
   "dependencies": {
     "alert": "^5.0.10",
