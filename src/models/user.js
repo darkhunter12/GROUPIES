@@ -40,9 +40,9 @@ UserSchema.methods.login = function(password) {
 */
 
 
-
-==================================================================
 /*
+==================================================================
+
 UserSchema.pre('save',async function(next) {
 try{
   const salt = await bcrypt.genSalt(10)
@@ -54,6 +54,7 @@ try{
   next(err)
 }
 })
+
 =================================================================
   bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err) {
