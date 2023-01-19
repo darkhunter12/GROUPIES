@@ -5,7 +5,7 @@ It is a Web based communication application.
 Front-End: HTML5, JavaScript, CSS3. 
 
 Back-End: Node.js, Express, Mongodb.
-
+```sh
 Features:- 
 i) Login/Logout  
 ii) 1–1 call, group calls
@@ -17,10 +17,9 @@ vi) Text chat
 vii) Screen sharing
 viii) Screen recording
 ix) Video recording
-x) Mute & 
-unmute audio/video 
+x) Mute & unmute audio/video 
 xi) Feedback
-
+```
 ### Usage
 
 ```sh
